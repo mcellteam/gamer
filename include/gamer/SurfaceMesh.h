@@ -74,7 +74,11 @@ struct SMGlobal
         marker(marker), volumeConstraint(volumeConstraint), useVolumeConstraint(useVolumeConstraint), ishole(ishole) {}
 };
 
-struct SMVertex : Vertex { using Vertex::Vertex; };
+struct SMVertex : Vertex {
+    /// Cached normal vector
+    Vector normal;
+    using Vertex::Vertex;
+};
 
 /**
  * @brief      Edge data
@@ -101,6 +105,7 @@ struct SMFaceProperties
 {
     int  marker;   /**< @brief Marker */
     bool selected; /**< @brief Selection flag */
+    Vector normal; /**< @brief cached normal of face */
 
     /**
      * @brief      Face properties constructor
@@ -280,7 +285,7 @@ namespace surfacemesh_detail
  * @param      mesh      The mesh
  * @param[in]  vertexID  The vertex id
  */
-void decimateVertex(SurfaceMesh &mesh, SurfaceMesh::SimplexID<1> vertexID);
+void decimateVertex(SurfaceMesh &mesh, SurfaceMesh::SimplexID<1> vertexID, std::size_t rings = 2);
 
 /**
  * @brief      Computes the local structure tensor
@@ -295,6 +300,22 @@ tensor<double, 3, 2> computeLocalStructureTensor(
     const SurfaceMesh              &mesh,
     const SurfaceMesh::SimplexID<1> vertexID,
     const int                       rings);
+
+
+/**
+ * @brief      Computes the local structure tensor from cached normals
+ *
+ * @param[in]  mesh      Surface mesh of interest
+ * @param[in]  vertexID  Vertex of interest
+ * @param[in]  rings     Number of neighborhood rings to consider
+ *
+ * @return     The local structure tensor.
+ */
+tensor<double, 3, 2> computeLSTFromCache(
+    const SurfaceMesh              &mesh,
+    const SurfaceMesh::SimplexID<1> vertexID,
+    const int                       rings);
+
 
 /**
  * @brief      Terminal case
@@ -508,6 +529,10 @@ Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> getEigenvalues(tensor<double, 3, 
  */
 void weightedVertexSmooth(SurfaceMesh &mesh, SurfaceMesh::SimplexID<1> vertexID, int rings);
 
+Vector weightedVertexSmoothCache(SurfaceMesh &mesh,
+                               SurfaceMesh::SimplexID<1> vertexID,
+                               std::size_t rings);
+
 /**
  * @brief      Traditional barycenter smooth.
  *
@@ -523,6 +548,8 @@ void barycenterVertexSmooth(SurfaceMesh &mesh, SurfaceMesh::SimplexID<1> vertexI
  * @param[in]  edgeID  SimplexID of the edge to flip.
  */
 void edgeFlip(SurfaceMesh &mesh, SurfaceMesh::SimplexID<2> edgeID);
+
+void edgeFlipCache(SurfaceMesh &mesh, SurfaceMesh::SimplexID<2> edgeID);
 
 /**
  * @brief      Select edges which are good candidates for flipping
@@ -834,6 +861,8 @@ double getArea(const SurfaceMesh &mesh, SurfaceMesh::SimplexID<3> faceID);
  */
 double getArea(Vertex a, Vertex b, Vertex c);
 
+REAL getArea(std::array<Vertex, 3> t);
+
 /**
  * @brief      Gets the volume.
  *
@@ -883,6 +912,9 @@ double getMeanCurvature(const SurfaceMesh &mesh, const SurfaceMesh::SimplexID<1>
  */
 double getGaussianCurvature(const SurfaceMesh &mesh, const SurfaceMesh::SimplexID<1> vertexID);
 
+
+std::tuple<REAL*, REAL*, REAL*, REAL*, std::map<typename SurfaceMesh::KeyType,typename SurfaceMesh::KeyType>>
+computeCurvatures(const SurfaceMesh &mesh);
 
 //
 // @param      mesh  The mesh
@@ -946,17 +978,37 @@ void centeralize(SurfaceMesh &mesh);
  * @param[in]  preserveRidges  The preserve ridges
  * @param[in]  verbose         The verbose
  */
-void smoothMesh(SurfaceMesh &mesh, int maxIter, bool preserveRidges, bool verbose);
+void smoothMesh(SurfaceMesh &mesh, int maxIter, bool preserveRidges, bool verbose, std::size_t rings = 2);
 
 /**
- * @brief      Coarsens the mesh by selecting vertices first.
+ * @brief      Coarsens the mesh
  *
  * @param      mesh         The mesh
  * @param[in]  coarseRate   The coarse rate
  * @param[in]  flatRate     The flat rate
  * @param[in]  denseWeight  The dense weight
  */
-void coarse(SurfaceMesh &mesh, double coarseRate, double flatRate, double denseWeight);
+void coarse(SurfaceMesh &mesh, double coarseRate, double flatRate, double denseWeight, std::size_t rings = 2);
+
+/**
+ * @brief      Coarsens the mesh by selecting vertices first.
+ *
+ * @param      mesh       The mesh
+ * @param[in]  threshold  The threshold
+ * @param[in]  weight     The weight
+ * @param[in]  rings      The rings
+ */
+void coarse_dense(SurfaceMesh &mesh, REAL threshold, REAL weight, std::size_t rings = 2);
+
+/**
+ * @brief      Coarsens flat regions by LST analysis
+ *
+ * @param      mesh       The mesh
+ * @param[in]  threshold  The threshold
+ * @param[in]  weight     The weight
+ * @param[in]  rings      The rings
+ */
+void coarse_flat(SurfaceMesh &mesh, REAL threshold, REAL weight, std::size_t rings = 2);
 
 /**
  * @brief      Perform smoothing of the mesh normals
@@ -1014,4 +1066,6 @@ std::unique_ptr<SurfaceMesh> cube(int order);
  * @return     Vector of surface meshes
  */
 std::vector<std::unique_ptr<SurfaceMesh> > splitSurfaces(SurfaceMesh &mesh);
+
+void cacheNormals(SurfaceMesh &mesh);
 } // end namespace gamer
