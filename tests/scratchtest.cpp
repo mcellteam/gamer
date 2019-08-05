@@ -27,8 +27,8 @@ int  main(int argc, char *argv[])
     }
 
     // gamer::writeOFF("sphere.off", *mesh);
-    // gamer::writeOFFm("spherem.off", *mesh);
-    gamer::writeOBJ("sphere.obj", *mesh);
+    gamer::writeOFFm("spherem.off", *mesh);
+    // gamer::writeOBJ("sphere.obj", *mesh);
 
     auto mesh2 = gamer::readOFFm("spherem.off");
 

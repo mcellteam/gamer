@@ -107,6 +107,19 @@ PYBIND11_MODULE(pygamer, pygamer) {
     );
 
 
+    pygamer.def("readOFFm", &readOFFm,
+        py::arg("filename"),
+        R"delim(
+            Read OFF file to mesh
+
+            Args:
+                filename (str): Filename to read from
+            Returns:
+                :py:class:`surfacemesh.SurfaceMesh`: Mesh of interest
+        )delim"
+    );
+
+
     pygamer.def("readPDB_molsurf", &readPDB_molsurf,
         py::arg("filename"),
         R"delim(
@@ -142,6 +155,16 @@ PYBIND11_MODULE(pygamer, pygamer) {
         )delim"
     );
 
+    pygamer.def("writeOFFm", py::overload_cast<const std::string&, const SurfaceMesh&>(&writeOFFm),
+        py::arg("filename"), py::arg("mesh"),
+        R"delim(
+            Write mesh to file in OFF format
+
+            Args:
+                filename (str): Filename to write to
+                mesh (:py:class:`surfacemesh.SurfaceMesh`): Mesh of interest
+        )delim"
+    );
 
     pygamer.def("writeOFF", py::overload_cast<const std::string&, const TetMesh&>(&writeOFF),
         py::arg("filename"), py::arg("mesh"),
