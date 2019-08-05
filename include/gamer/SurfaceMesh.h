@@ -52,7 +52,7 @@ namespace gamer
  */
 struct SMGlobal
 {
-    /// Domain marker to be used when tetrahedralizing.
+    /// Domain marker to be uxsed when tetrahedralizing.
     int   marker;
     /// Volume constraint of the tetrahedralized domain.
     float volumeConstraint;
@@ -738,6 +738,7 @@ struct CopyHelper
  */
 std::unique_ptr<SurfaceMesh> readOFF(const std::string &filename);
 
+std::unique_ptr<SurfaceMesh> readOFFm(const std::string &filename);
 
 /**
  * @brief      Write the SurfaceMesh to file in OFF format.
@@ -747,12 +748,16 @@ std::unique_ptr<SurfaceMesh> readOFF(const std::string &filename);
  */
 void writeOFF(const std::string &filename, const SurfaceMesh &mesh);
 
+void writeOFFm(const std::string &filename, const SurfaceMesh &mesh);
+
 /**
  * @brief      Reads an obj file.
  *
  * @param[in]  filename  The filename
  *
  * @return     Unique pointer to SurfaceMesh
+
+
  */
 std::unique_ptr<SurfaceMesh> readOBJ(const std::string &filename);
 

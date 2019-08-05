@@ -20,9 +20,21 @@
 
 int  main(int argc, char *argv[])
 {
-    auto mesh = gamer::readPDB_gauss("2jho.pdb", -0.2, 3);
+    auto mesh = gamer::sphere(1);
 
-    gamer::writeOFF("2jho.off", *mesh);
+    for(auto fID : mesh->get_level_id<3>()){
+        (*fID).marker = 5;
+    }
+
+    // gamer::writeOFF("sphere.off", *mesh);
+    // gamer::writeOFFm("spherem.off", *mesh);
+    gamer::writeOBJ("sphere.obj", *mesh);
+
+    auto mesh2 = gamer::readOFFm("spherem.off");
+
+    for (auto fID : mesh2->get_level_id<3>()){
+        std::cout << fID << " " << (*fID).marker << std::endl;
+    }
 
     // auto mesh = gamer::readOFF("icosa.off");
 
