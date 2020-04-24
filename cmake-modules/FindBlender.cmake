@@ -53,7 +53,7 @@ if(BLENDER_EXECUTABLE)
         endif()
 
         string(REGEX REPLACE "\n" ";" _BLENDER_VALUES ${_BLENDER_VALUES})
-        list(GET _BLENDER_VALUES 0 git@github.com:mcellteam/gamer.git)
+        list(GET _BLENDER_VALUES 0 BLENDER_VERSION)
         list(GET _BLENDER_VALUES 1 BLENDER_SCRIPT_PATH)
         list(GET _BLENDER_VALUES 2 BLENDER_PYTHON_VERSION)
         list(GET _BLENDER_VALUES 3 BLENDER_PYTHON_EXECUTABLE)
