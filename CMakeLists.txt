@@ -29,6 +29,9 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 # Add path to custom modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake-modules")
 
+# linking on centos7 with 7.3.1 fails with undefined reference to `casc::detail::asc_NodeBase::~asc_NodeBase()'
+set(PYBIND11_LTO_CXX_FLAGS "")
+
 if(SKBUILD)
     message(STATUS "The project is being built using scikit-build")
 endif()
