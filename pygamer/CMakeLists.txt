@@ -46,6 +46,10 @@ pybind11_add_module(pygamer MODULE ${PYGAMER_SOURCES})
 # Link pygamer to gamer static
 target_link_libraries(pygamer PRIVATE gamerstatic)
 
+# fix for compilation with mingw
+if(WIN32 AND CMAKE_COMPILER_IS_GNUCC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMS_WIN64 -D_hypot=hypot")
+endif()
 
 execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
     "from distutils import sysconfig as s;import sys;import struct;

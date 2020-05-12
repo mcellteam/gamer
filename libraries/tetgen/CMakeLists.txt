@@ -20,9 +20,13 @@ if(SINGLE)
 endif(SINGLE)
 
 # Set some definitions in accord with Shewchuk's recommendations
-if(CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_COMPILER_IS_GNUCC)
+if(CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_COMPILER_IS_GNUCC)   
     # Linux & gcc only... APPLE does not define fpu_control
     list(APPEND COMPILE_DEFS LINUX)
+    set_source_files_properties(predicates.cxx PROPERTIES COMPILE_FLAGS -O0)
+elseif(WIN32 AND CMAKE_COMPILER_IS_GNUCC)
+	# workaround for mingw, doe not fo FPU initalization therefore the result will not be
+	# binary exact, but it seems that we are not using tetgen from cellblender anyway
     set_source_files_properties(predicates.cxx PROPERTIES COMPILE_FLAGS -O0)
 elseif(WIN32)
     list(APPEND COMPILE_DEFS CPU86)
