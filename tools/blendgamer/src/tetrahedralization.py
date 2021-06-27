@@ -119,21 +119,21 @@ class GAMER_OT_cleanup_domains(bpy.types.Operator):
 
 
 class GAMerTetDomainPropertyGroup(bpy.types.PropertyGroup):
-    # name = StringProperty()  # This is a reminder that "name" is already defined for all subclasses of PropertyGroup
-    domain_id = IntProperty(name="ID", default=-1, description="Domain ID")
+    # name: StringProperty()  # This is a reminder that "name" is already defined for all subclasses of PropertyGroup
+    domain_id: IntProperty(name="ID", default=-1, description="Domain ID")
     # Deprecated in 2.0.7 in favor of pointer properties
-    # object_name = StringProperty(name="ObjName", default="", description="Object Name")
-    object_pointer = PointerProperty(
+    # object_name: StringProperty(name="ObjName", default="", description="Object Name")
+    object_pointer: PointerProperty(
         type=bpy.types.Object, name="Test", description="Object"
     )
-    marker = IntProperty(name="Marker", default=-1, description="Domain Marker Integer")
-    is_hole = BoolProperty(
+    marker: IntProperty(name="Marker", default=-1, description="Domain Marker Integer")
+    is_hole: BoolProperty(
         name="Hole", default=False, description="Use this domain as a hole"
     )
-    constrain_vol = BoolProperty(
+    constrain_vol: BoolProperty(
         name="Constrain Volume", default=False, description="Constrain Volume"
     )
-    vol_constraint = FloatProperty(
+    vol_constraint: FloatProperty(
         name="Vol Constraint", default=10.0, description="Volume Constraint"
     )
 
@@ -179,61 +179,61 @@ class GAMerTetDomainPropertyGroup(bpy.types.PropertyGroup):
 
 
 class GAMerTetrahedralizationPropertyGroup(bpy.types.PropertyGroup):
-    export_path = StringProperty(
+    export_path: StringProperty(
         name="Export Directory",
         description="Path to directory where files will be created",
         default="//",
         maxlen=1024,
         subtype="DIR_PATH",
     )
-    export_filebase = StringProperty(
+    export_filebase: StringProperty(
         name="Filename",
         description="Base name of the files to export",
         default="gamertetmesh",
         maxlen=1024,
         subtype="FILE_NAME",
     )
-    domain_list = CollectionProperty(
+    domain_list: CollectionProperty(
         type=GAMerTetDomainPropertyGroup, name="Domain List"
     )
-    active_domain_index = IntProperty(name="Active Domain Index", default=0)
-    next_id = IntProperty(
+    active_domain_index: IntProperty(name="Active Domain Index", default=0)
+    next_id: IntProperty(
         name="Counter for Unique Domain IDs", default=1
     )  # Start ID's at 1 to confirm initialization
 
-    show_settings = BoolProperty(
+    show_settings: BoolProperty(
         name="Tetrahedralization Settings",
         default=False,
         description="Show more detailed settings",
     )
 
-    min_dihedral = FloatProperty(
+    min_dihedral: FloatProperty(
         name="Min Dihedral", default=10.0, description="Minimum Dihedral in Degrees"
     )
-    max_aspect_ratio = FloatProperty(
+    max_aspect_ratio: FloatProperty(
         name="Max Aspect Ratio", default=1.3, description="Maximum Aspect Ratio"
     )
 
-    ho_mesh = BoolProperty(
+    ho_mesh: BoolProperty(
         name="Higher order mesh generation",
         default=False,
         description="Higher order mesh generation",
     )
 
-    dolfin = BoolProperty(
+    dolfin: BoolProperty(
         name="DOLFIN", default=False, description="Generate DOLFIN output"
     )
-    # diffpack = BoolProperty(
+    # diffpack: BoolProperty(
     #         name="Diffpack", default=False,
     #         description="Generate Diffpack output")
-    paraview = BoolProperty(
+    paraview: BoolProperty(
         name="Paraview", default=False, description="Generate Paraview output"
     )
-    comsol = BoolProperty(
+    comsol: BoolProperty(
         name="Comsol", default=False, description="Generate Comsol mphtxt output"
     )
 
-    status = StringProperty(name="status", default="")
+    status: StringProperty(name="status", default="")
 
     def add_tet_domain(self, report, context):
         """ Add a new tet domain to the list of tet domains for each selected object """

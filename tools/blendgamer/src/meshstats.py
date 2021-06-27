@@ -61,7 +61,7 @@ class GAMER_OT_MeshStats_Select_Report(bpy.types.Operator):
     bl_label = "Select Report"
     bl_options = {"INTERNAL"}
 
-    index = IntProperty()
+    index: IntProperty()
 
     _type_to_mode = {
         bmesh.types.BMVert: "VERT",
@@ -426,14 +426,14 @@ class GAMER_OT_write_quality_info(bpy.types.Operator):
 
 
 class MeshQualityReportProperties(bpy.types.PropertyGroup):
-    n_wagon_edges = IntProperty(
+    n_wagon_edges: IntProperty(
         name="N Edges",
         default=8,
         min=1,
         description="The number of incident edges to a vertex to be selected",
     )
 
-    export_path = StringProperty(
+    export_path: StringProperty(
         name="Export Directory",
         description="Path to directory where files will be created",
         default="//",
@@ -441,7 +441,7 @@ class MeshQualityReportProperties(bpy.types.PropertyGroup):
         subtype="DIR_PATH",
     )
 
-    export_filebase = StringProperty(
+    export_filebase: StringProperty(
         name="Filename",
         description="Base name of the files to export",
         default="meshquality",
@@ -449,7 +449,7 @@ class MeshQualityReportProperties(bpy.types.PropertyGroup):
         subtype="FILE_NAME",
     )
 
-    min_angle = IntProperty(
+    min_angle: IntProperty(
         name="Angle Threshold",
         default=15,
         min=0,
@@ -457,13 +457,13 @@ class MeshQualityReportProperties(bpy.types.PropertyGroup):
         description="Select faces with angles less than this criteria",
     )
 
-    compute_betti = BoolProperty(
+    compute_betti: BoolProperty(
         name="Compute Betti Numbers",
         description="Calculate the first 3 betti numbers of a mesh",
         default=False,
     )
 
-    intersect_epsilon = FloatProperty(
+    intersect_epsilon: FloatProperty(
         name="Intersection tolerance",
         default=0.00001,
         min=0,
@@ -471,7 +471,7 @@ class MeshQualityReportProperties(bpy.types.PropertyGroup):
         description="Tolerance use to search for intersecting faces.",
     )
 
-    show_extras = BoolProperty(
+    show_extras: BoolProperty(
         name="Additional Reports",
         default=False,
         description="Show additional report generation options",

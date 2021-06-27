@@ -79,22 +79,22 @@ class GAMerAddonProperties(bpy.types.PropertyGroup):
     Property group to store GAMer addon metadata
     """
 
-    initialized = BoolProperty(name="GAMer Initialized", default=False)
-    matplotlib_found = BoolProperty(name="Is matplotlib available", default=False)
-    gamer_version = StringProperty(name="GAMer Version", default="0")
-    boundary_id_counter = IntProperty(name="GAMer Boundary id Counter")
-    versionerror = IntProperty(name="Version mismatch", default=0)
+    initialized: BoolProperty(name="GAMer Initialized", default=False)
+    matplotlib_found: BoolProperty(name="Is matplotlib available", default=False)
+    gamer_version: StringProperty(name="GAMer Version", default="0")
+    boundary_id_counter: IntProperty(name="GAMer Boundary id Counter")
+    versionerror: IntProperty(name="Version mismatch", default=0)
 
-    surfmesh_improvement_properties = PointerProperty(
+    surfmesh_improvement_properties: PointerProperty(
         type=SurfaceMeshImprovementProperties,
         name="GAMer Surface Mesh Improvement Properties",
     )
 
-    mesh_quality_properties = PointerProperty(
+    mesh_quality_properties: PointerProperty(
         type=MeshQualityReportProperties, name="GAMer Mesh Quality Reporting"
     )
 
-    tet_group = PointerProperty(
+    tet_group: PointerProperty(
         type=GAMerTetrahedralizationPropertyGroup, name="GAMer Tetrahedralization"
     )
 
@@ -133,8 +133,8 @@ class GAMerObjectProperties(bpy.types.PropertyGroup):
     PropertyGroup of properties to link into Blender Objects
     """
 
-    markers = PointerProperty(type=GAMerBoundaryMarkersList, name="Boundary Markers")
-    curvatures = PointerProperty(type=GAMerCurvaturesList, name="Curvature Lists")
+    markers: PointerProperty(type=GAMerBoundaryMarkersList, name="Boundary Markers")
+    curvatures: PointerProperty(type=GAMerCurvaturesList, name="Curvature Lists")
 
 
 classes = [GAMerAddonProperties, GAMerObjectProperties]

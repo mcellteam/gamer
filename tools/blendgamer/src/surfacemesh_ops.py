@@ -158,7 +158,7 @@ class GAMER_OT_fill_holes(bpy.types.Operator):
 
 
 class SurfaceMeshImprovementProperties(bpy.types.PropertyGroup):
-    dense_rate = FloatProperty(
+    dense_rate: FloatProperty(
         name="Thresh",
         default=1,
         min=0.001,
@@ -167,7 +167,7 @@ class SurfaceMeshImprovementProperties(bpy.types.PropertyGroup):
         description="Threshold for coarsening dense areas",
     )
 
-    dense_iter = IntProperty(
+    dense_iter: IntProperty(
         name="Iter",
         default=1,
         min=1,
@@ -175,7 +175,7 @@ class SurfaceMeshImprovementProperties(bpy.types.PropertyGroup):
         description="The number of coarse dense iterations to apply",
     )
 
-    flat_rate = FloatProperty(
+    flat_rate: FloatProperty(
         name="Threshold",
         default=0.016,
         min=0.00001,
@@ -184,7 +184,7 @@ class SurfaceMeshImprovementProperties(bpy.types.PropertyGroup):
         description="The rate for coarsening flat areas",
     )
 
-    flat_iter = IntProperty(
+    flat_iter: IntProperty(
         name="Iter",
         default=1,
         min=1,
@@ -192,7 +192,7 @@ class SurfaceMeshImprovementProperties(bpy.types.PropertyGroup):
         description="The number of coarse flat iterations to apply",
     )
 
-    smooth_iter = IntProperty(
+    smooth_iter: IntProperty(
         name="Iter",
         default=10,
         min=1,
@@ -200,38 +200,38 @@ class SurfaceMeshImprovementProperties(bpy.types.PropertyGroup):
         description="The number smoothing iterations to apply",
     )
 
-    preserve_ridges = BoolProperty(
+    preserve_ridges: BoolProperty(
         name="Preserve ridges",
         default=False,
         description="Skip flipping of edges which lie on ridges",
     )
 
-    normSmoothAniso = FloatProperty(
+    normSmoothAniso: FloatProperty(
         name="Anisotropic control",
         default=1.0,
         min=0,
         description="The degree of anisotropy in LST correction for normal smooth",
     )
 
-    advanced_options = BoolProperty(
+    advanced_options: BoolProperty(
         name="Advanced options",
         default=False,
         description="Show additional surface mesh improvement options",
     )
 
-    autocorrect_normals = BoolProperty(
+    autocorrect_normals: BoolProperty(
         name="Autocorrect normals",
         default=True,
         description="Automatically flip normals when mesh volume is 'negative'",
     )
 
-    verbose = BoolProperty(
+    verbose: BoolProperty(
         name="Verbose",
         default=False,
         description="Print additional information to console",
     )
 
-    rings = IntProperty(
+    rings: IntProperty(
         name="LST rings",
         default=2,
         min=1,

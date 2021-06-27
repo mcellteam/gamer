@@ -159,7 +159,7 @@ class GAMerBoundaryMaterial(bpy.types.PropertyGroup):
     Class for GAMer boundary material property group.
     """
 
-    boundary_id = IntProperty(name="Boundary ID associated with material", default=-1)
+    boundary_id: IntProperty(name="Boundary ID associated with material", default=-1)
 
 
 class GAMerBoundaryMarker(bpy.types.PropertyGroup):
@@ -167,21 +167,21 @@ class GAMerBoundaryMarker(bpy.types.PropertyGroup):
     Class for GAMer boundary markers property group.
     """
 
-    boundary_id = IntProperty(
+    boundary_id: IntProperty(
         name="Boundary ID",
         description="Unique identifier of this boundary",
         min=-1,
         default=-1,
     )
-    boundary_name = StringProperty(
+    boundary_name: StringProperty(
         name="Boundary Name", description="Name of the boundary", default="Boundary"
     )
-    marker = IntProperty(
+    marker: IntProperty(
         name="Marker Value",
         description="Marker value to associate with this boundary",
         default=1,
     )
-    status = BoolProperty(name="Status", default=False)
+    status: BoolProperty(name="Status", default=False)
 
     def init_boundary(self, context):
         """
@@ -375,8 +375,8 @@ class GAMerBoundaryMarker(bpy.types.PropertyGroup):
 
 
 class GAMerBoundaryMarkersList(bpy.types.PropertyGroup):
-    boundary_list = CollectionProperty(type=GAMerBoundaryMarker, name="Boundary List")
-    active_bnd_index = IntProperty(name="Active Boundary Index", default=0)
+    boundary_list: CollectionProperty(type=GAMerBoundaryMarker, name="Boundary List")
+    active_bnd_index: IntProperty(name="Active Boundary Index", default=0)
 
     def get_active_boundary(self):
         """

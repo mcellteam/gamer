@@ -189,42 +189,42 @@ class GAMER_OT_compute_curvatures(bpy.types.Operator):
 
 
 class GAMerCurvatureItem(bpy.types.PropertyGroup):
-    curvatureType = EnumProperty(
+    curvatureType: EnumProperty(
         name="Curvature Type", description="Which curvature?", items=curvatureTypeEnums
     )
-    algorithm = EnumProperty(
+    algorithm: EnumProperty(
         name="Curvature algorithm used",
         description="Which algorithm was used?",
         items=curvatureCalcEnums,
     )
 
     ## Addition metadata for saving plot states...
-    minCurve = FloatProperty(
+    minCurve: FloatProperty(
         name="Minimum curvature",
         default=0,
         description="Lower bound percentile truncation",
     )
 
-    maxCurve = FloatProperty(
+    maxCurve: FloatProperty(
         name="Maximum curvature",
         default=100,
         description="Upper bound percentile truncation",
     )
 
-    curveIter = IntProperty(
+    curveIter: IntProperty(
         name="Smooth Curvature Iterations",
         min=0,
         default=0,
         description="How many iterations of curvature smoothing?",
     )
 
-    limitsArePercentiles = BoolProperty(
+    limitsArePercentiles: BoolProperty(
         name="Treat Min/Max as percentiles",
         default=True,
         description="Treat min and max as percentiles?",
     )
 
-    mixpoint = FloatProperty(
+    mixpoint: FloatProperty(
         name="Color mixing point",
         default=0.5,
         min=0,
@@ -232,29 +232,29 @@ class GAMerCurvatureItem(bpy.types.PropertyGroup):
         description="Value for color mixing",
     )
 
-    colormap = EnumProperty(
+    colormap: EnumProperty(
         name="Colormap colors", description="Colormap used", items=colormap_enums
     )
 
 
 class GAMerCurvaturesList(bpy.types.PropertyGroup):
-    algorithm = EnumProperty(
+    algorithm: EnumProperty(
         name="Curvature Algorithm",
         description="Which algorithm was used?",
         items=curvatureCalcEnums,
     )
 
-    curvature_list = CollectionProperty(
+    curvature_list: CollectionProperty(
         type=GAMerCurvatureItem, name="List of computed curvatures"
     )
 
-    active_index = IntProperty(name="Active Index", default=0)
+    active_index: IntProperty(name="Active Index", default=0)
 
-    showplots = BoolProperty(
+    showplots: BoolProperty(
         name="Show plot", default=False, description="Display the plots"
     )
 
-    saveplots = BoolProperty(
+    saveplots: BoolProperty(
         name="Save plots", default=False, description="Save the generated plots"
     )
 
