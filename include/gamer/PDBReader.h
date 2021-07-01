@@ -41,15 +41,6 @@ namespace gamer {
 /// @cond detail
 namespace pdbreader_detail {
 const double EPSILON = 1e-3;
-/// Regular expression for parsing PDB file extension
-static const std::regex PDB(".*.pdb", std::regex::icase | std::regex::optimize);
-/// Regular expression for parsing PQR file extension
-static const std::regex PQR(".*.pqr", std::regex::icase | std::regex::optimize);
-/// Regular expression for parsing XYZR file extension
-static const std::regex XYZR(".*.xyzr",
-                             std::regex::icase | std::regex::optimize);
-/// Regular expression to parse for lines starting with ATOM
-static const std::regex atom("ATOM.*\n*", std::regex::optimize);
 
 /**
  * @brief      PDB element information
@@ -286,13 +277,14 @@ template <typename Inserter>
 bool readPDB(const std::string &filename, Inserter inserter) {
   std::ifstream infile(filename);
   std::string line;
+  std::regex atom("ATOM.*\n*", std::regex::optimize);
 
   initElementMap(); // Init the element map if it
 
   if (infile.is_open()) {
     while (std::getline(infile, line)) {
       std::smatch match;
-      if (std::regex_match(line, match, pdbreader_detail::atom)) {
+      if (std::regex_match(line, match, atom)) {
         Atom atom;
         // See PDB file formatting guidelines
         float x = std::atof(line.substr(30, 8).c_str());
@@ -345,13 +337,14 @@ template <typename Inserter>
 bool readPQR(const std::string &filename, Inserter inserter) {
   std::ifstream infile(filename);
   std::string line;
+  std::regex atom("ATOM.*\n*", std::regex::optimize);
 
   initElementMap(); // Init the element map if it
 
   if (infile.is_open()) {
     while (std::getline(infile, line)) {
       std::smatch match;
-      if (std::regex_match(line, match, pdbreader_detail::atom)) {
+      if (std::regex_match(line, match, atom)) {
         Atom atom;
         // See PDB file formatting guidelines
         float x = std::atof(line.substr(30, 8).c_str());
