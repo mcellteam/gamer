@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(Tetgen VERSION 1.5.0)
+project(Tetgen VERSION 1.6.0)
 
 set(TETGEN_MASTER_PROJECT OFF)
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -30,7 +30,6 @@ elseif(WIN32 AND CMAKE_COMPILER_IS_GNUCC)
     set_source_files_properties(predicates.cxx PROPERTIES COMPILE_FLAGS -O0)
 elseif(WIN32)
     list(APPEND COMPILE_DEFS CPU86)
-    list(APPEND COMPILE_DEFS _MSC_VER)
     if(CMAKE_SIZEOF_VOID_P EQUAL 8)
         list(APPEND COMPILE_DEFS _WIN64)
     endif()
