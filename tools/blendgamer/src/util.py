@@ -65,7 +65,7 @@ class ObjectMode:
 
 @contextmanager
 def BMeshContext(obj):
-    if obj.type != "MESH":
+    if not obj or obj.type != "MESH":
         raise RuntimeError("Expected an object of MESH type.")
 
     me = obj.data
@@ -93,7 +93,7 @@ def BMeshContext(obj):
 @contextmanager
 def copiedBMeshContext(obj, transform=False, triangulate=False, apply_modifiers=False):
     """Context for a bmesh copied from the mesh. Changes are not written back to the original mesh."""
-    if obj.type != "MESH":
+    if not obj or obj.type != "MESH":
         raise RuntimeError("Expected object of MESH type.")
 
     if apply_modifiers and obj.modifiers:
@@ -571,7 +571,16 @@ def make_annotations(cls):
     """
     if bpy.app.version < (2, 80):
         return cls
-    bl_props = {k: v for k, v in cls.__dict__.items() if isinstance(v, tuple)}
+
+    if bpy.app.version >= (2, 93, 0):
+        bl_props = {
+            k: v
+            for k, v in cls.__dict__.items()
+            if isinstance(v, bpy.props._PropertyDeferred)
+        }
+    else:
+        bl_props = {k: v for k, v in cls.__dict__.items() if isinstance(v, tuple)}
+
     if bl_props:
         if "__annotations__" not in cls.__dict__:
             setattr(cls, "__annotations__", {})
