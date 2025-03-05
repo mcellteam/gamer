@@ -142,9 +142,14 @@ void decimateVertex(SurfaceMesh &mesh, SurfaceMesh::SimplexID<1> vertexID,
     }
     // The ring isn't really a ring
     if (!success) {
-      throw std::runtime_error(
-          "ERROR(coarse): Hole ring is not closed. "
-          "Please contact the developers with this error.");
+      std::stringstream ss;
+      ss << "Offending vertices:";
+      for (auto item : boundary) {
+        ss << item << ", ";
+      }
+      gamer_runtime_error("ERROR(coarse): Hole ring is not closed. "
+                          "Please contact the developers with this error.",
+                          ss.str());
     }
   }
 
@@ -237,8 +242,14 @@ void triangulateHole(SurfaceMesh &mesh,
       mesh, std::move(keys), backupVerts.begin(), backupVerts.end());
 
   if (!computeLocalOrientation(mesh, holeEdges)) {
-    throw std::runtime_error(
-        "ERROR(triangulateHole): Mesh became non-orientable");
+
+    std::stringstream ss;
+    ss << "Offending edges:";
+    for (auto item : holeEdges) {
+      ss << item << ", ";
+    }
+    gamer_runtime_error("ERROR(triangulateHole): Mesh became non-orientable.",
+                        ss.str());
   }
 }
 
@@ -354,9 +365,11 @@ void weightedVertexSmooth(SurfaceMesh &mesh, SurfaceMesh::SimplexID<1> vertexID,
       nS = next - shared;
       normalize(nS);
     } catch (std::exception &e) {
-      throw std::runtime_error(
-          "ERROR: Zero length edge found. "
-          "weightedVertexSmooth expects no zero length edges.");
+      std::stringstream ss;
+      ss << "Offending edge: " << edge;
+      gamer_runtime_error("ERROR: Zero length edge found. "
+                          "weightedVertexSmooth expects no zero length edges.",
+                          ss.str());
     }
 
     // Bisector of the 'rhombus'
@@ -472,9 +485,11 @@ Vector weightedVertexSmoothCache(SurfaceMesh &mesh,
       nS = next - shared;
       normalize(nS);
     } catch (std::exception &e) {
-      throw std::runtime_error(
-          "ERROR: Zero length edge found. "
-          "weightedVertexSmooth expects no zero length edges.");
+      std::stringstream ss;
+      ss << "Offending edge: " << edge;
+      gamer_runtime_error("ERROR: Zero length edge found."
+                          "weightedVertexSmooth expects no zero length edges.",
+                          ss.str());
     }
 
     // Bisector of the 'rhombus'
@@ -557,10 +572,8 @@ void normalSmoothH(SurfaceMesh &mesh, SurfaceMesh::SimplexID<1> vertexID,
   double areaSum = 0;
 
   auto p = (*vertexID).position;
-  Eigen::Vector4d pos_e;
-  pos_e << p[0], p[1], p[2], 1; // 4D for affine3D
-  Eigen::Vector4d newPos_e;
-  newPos_e << 0, 0, 0, 0;
+  Eigen::Vector4d pos_e{p[0], p[1], p[2], 1}; // 4D for affine3D
+  Eigen::Vector4d newPos_e{0, 0, 0, 0};
 
   // For each incident face get the average normal
   auto incidentFaces = mesh.up(mesh.up(vertexID));
@@ -719,7 +732,7 @@ bool checkFlipAngle(const SurfaceMesh &mesh,
         tmp = angleDeg(triangle[sigma[0]], triangle[sigma[1]],
                        triangle[sigma[2]]);
       } catch (std::runtime_error &e) {
-        throw std::runtime_error(
+        gamer_runtime_error(
             "Angle is undefined for face with zero area. Try running "
             "degenerate dissolve in Blender and ensure manifoldness.");
       }
@@ -894,7 +907,12 @@ void findHoles(const SurfaceMesh &mesh,
     // mesh.down(firstEdge, std::back_inserter(visitedVerts));
     // Try to complete the ring
     if (!orderBoundaryEdgeRing(mesh, bdryEdges, visitedVerts, bdryRing)) {
-      throw std::runtime_error("Couldn't connect ring");
+      std::stringstream ss;
+      ss << "Participating edges: ";
+      for (auto item : bdryEdges) {
+        ss << item << ", ";
+      }
+      gamer_runtime_error("Couldn't connect ring", ss.str());
     }
     holeList.push_back(bdryRing);
   }
@@ -1024,8 +1042,8 @@ bool checkEdgeFlip(
     // std::cerr << "This edge participates in more than 2
     // faces. "
     //           << "Returning..." << std::endl;
-    throw std::runtime_error("SurfaceMesh is not pseudomanifold. Found an edge "
-                             "connected to more than 2 faces.");
+    gamer_runtime_error("SurfaceMesh is not pseudomanifold. Found an edge "
+                        "connected to more than 2 faces.");
   } else if (up.size() < 2) // Edge is a boundary
   {
     // std::cerr << "This edge participates in fewer than 2

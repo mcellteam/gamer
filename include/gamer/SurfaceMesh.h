@@ -25,6 +25,7 @@
 #pragma once
 
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -52,6 +53,8 @@ struct SMGlobal {
   bool useVolumeConstraint;
   /// Flag that determines if the mesh represents a hole or not
   bool ishole;
+  /// Region point
+  Eigen::Vector3d regionPoint;
 
   /**
    * @brief      Default constructor
@@ -65,7 +68,10 @@ struct SMGlobal {
   SMGlobal(int marker = -1, float volumeConstraint = -1,
            bool useVolumeConstraint = false, bool ishole = false)
       : marker(marker), volumeConstraint(volumeConstraint),
-        useVolumeConstraint(useVolumeConstraint), ishole(ishole) {}
+        useVolumeConstraint(useVolumeConstraint), ishole(ishole),
+        regionPoint(std::numeric_limits<double>::max(),
+                    std::numeric_limits<double>::max(),
+                    std::numeric_limits<double>::max()) {}
 };
 
 struct SMVertex : Vertex {
@@ -544,8 +550,8 @@ void selectFlipEdges(
           // std::cerr << "This edge participates in more than 2
           // faces. "
           //           << "Returning..." << std::endl;
-          throw std::runtime_error("SurfaceMesh is not pseudomanifold. Found "
-                                   "an edge connected to more than 2 faces.");
+          gamer_runtime_error("SurfaceMesh is not pseudomanifold. Found "
+                              "an edge connected to more than 2 faces.");
         } else if (up.size() < 2) // Edge is a boundary
         {
           // std::cerr << "This edge participates in fewer than 2
@@ -1100,6 +1106,13 @@ std::unique_ptr<SurfaceMesh> cube(int order);
  */
 std::vector<std::unique_ptr<SurfaceMesh>> splitSurfaces(SurfaceMesh &mesh);
 
+/**
+ * @brief Cache face and vertex normals
+ *
+ * A zero vector normal will be stored instead of raising an error
+ *
+ * @param mesh Surface mesh of interest
+ */
 void cacheNormals(SurfaceMesh &mesh);
 
 std::tuple<bool, int, int, int> getBettiNumbers(SurfaceMesh &mesh);
