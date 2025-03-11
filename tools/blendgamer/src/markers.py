@@ -34,7 +34,7 @@ from bpy.props import (
     BoolVectorProperty,
 )
 
-from blendgamer.util import *
+from .util import *
 
 
 # OPERATORS

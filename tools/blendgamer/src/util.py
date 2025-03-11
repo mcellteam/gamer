@@ -26,8 +26,8 @@ import numpy as np
 from collections import deque
 from contextlib import contextmanager
 
-import blendgamer.pygamer as pygamer
-import blendgamer.pygamer.surfacemesh as sm
+#import blendgamer.pygamer.surfacemesh as sm
+from .pygamer import surfacemesh
 
 # DEFINITIONS
 UNSETID = 0  # ID value for unset markers
@@ -191,11 +191,22 @@ def getMarkerLayer(obj):
         raise RuntimeError(
             "Blender Layers (Markers) can only be accessed in 'OBJECT' mode."
         )
+
+    '''
     markerLayer = obj.data.polygon_layers_int.get("marker")
     # If the layer doesn't exist yet, create it!
     if not markerLayer:
         markerLayer = obj.data.polygon_layers_int.new(name="marker")
     return markerLayer.data
+    '''
+
+    # get the marker layer
+    markerLayer = obj.data.attributes.get('marker')
+    # If the layer doesn't exist yet, create it!
+    if markerLayer is None:
+        markerLayer = obj.data.attributes.new(name='marker', type='INT', domain='FACE')
+    return markerLayer.data
+
 
 
 def getBMeshMarkerLayer(bm):
@@ -240,10 +251,18 @@ def getCurvatureLayer(obj, algo, curvatureType):
         raise RuntimeError(
             "Blender Layers (%s) can only be accessed in 'OBJECT' mode." % (name)
         )
+    '''
     layer = obj.data.vertex_layers_float.get(name)
     # If the layer doesn't exist yet, create it!
     if not layer:
         layer = obj.data.vertex_layers_float.new(name=name)
+    return layer.data
+    '''
+
+    layer = obj.data.attributes.get(name)
+    # If the layer doesn't exist yet, create it!
+    if layer is None:
+        layer = obj.data.attributes.new(name=name, type='FLOAT', domain='POINT' )
     return layer.data
 
 
@@ -333,11 +352,11 @@ def blender_to_gamer(obj=None, map_boundaries=False, autocorrect_normals=True):
         # Grab vertices
         vertices, selected_vertices = getMeshVertices(obj, get_selected_vertices=True)
         # Get world location and offset each vertex with this value
-        gmesh = sm.SurfaceMesh()  # Init GAMer SurfaceMesh
+        gmesh = surfacemesh.SurfaceMesh()  # Init GAMer SurfaceMesh
 
         def addVertex(co, sel):  # functor to addVertices
             gmesh.addVertex(
-                sm.Vertex(
+                surfacemesh.Vertex(
                     co[0],  # x position
                     co[1],  # y position
                     co[2],  # z position
@@ -369,7 +388,7 @@ def blender_to_gamer(obj=None, map_boundaries=False, autocorrect_normals=True):
 
         edges = obj.data.edges
         for edge in edges:
-            gmesh.insertEdge(list(edge.vertices), sm.Edge(bool(edge.select)))
+            gmesh.insertEdge(list(edge.vertices), surfacemesh.Edge(bool(edge.select)))
 
         # Get list of faces
         faces = obj.data.polygons
@@ -393,7 +412,7 @@ def blender_to_gamer(obj=None, map_boundaries=False, autocorrect_normals=True):
                 orientation = 1
             gmesh.insertFace(
                 list(vertices),
-                sm.Face(orientation, boundaries[face.index], bool(face.select)),
+                surfacemesh.Face(orientation, boundaries[face.index], bool(face.select)),
             )
     # Ensure all face orientations are set
     gmesh.init_orientation()
@@ -422,7 +441,7 @@ def gamer_to_blender(gmesh, obj=None, mesh_name="gamer_improved"):
     """
 
     # Check arguments
-    if not isinstance(gmesh, sm.SurfaceMesh):
+    if not isinstance(gmesh, surfacemesh.SurfaceMesh):
         raise RuntimeError(
             "gamer_to_blender expected a pygamer.surfacemesh.SurfaceMesh object."
         )

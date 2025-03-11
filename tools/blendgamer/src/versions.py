@@ -22,10 +22,14 @@
 import bpy
 import sys
 import re
+import importlib
 
 from bpy.props import PointerProperty
 from ast import literal_eval
-from blendgamer.util import *
+
+globals()['blendgamer'] = importlib.import_module(__package__)
+
+from .util import *
 
 
 class GAMER_OT_prompt_update(bpy.types.Operator):
@@ -173,7 +177,8 @@ def getGamerVersion():
     tuple
         Tuple corresponding to the BlendGAMer version
     """
-    return sys.modules["blendgamer"].bl_info.get("version", (-1, -1, -1))
+    return blendgamer.gamer_info.get("version", (-1, -1, -1))
+    #return sys.modules["blendgamer"].bl_info.get("version", (-1, -1, -1))
 
 
 def checkVersion():

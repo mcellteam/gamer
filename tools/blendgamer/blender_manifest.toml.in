@@ -1,0 +1,16 @@
+schema_version = "1.0.0"
+id = "blendgamer"
+version = "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@"
+name = "GAMer: Geometry-preserving Adaptive Mesher"
+tagline = "Utilities for generating finite elements simulation compatible meshes"
+maintainer = "Christopher T. Lee, Justin Laughlin, John B. Moody, Zeyun Yu, Tom Bartol, Burak Kaynak, Johan Hake, and Michael Holst"
+type = "add-on"
+"website" = "https://github.com/ctlee/gamer"
+tags = ["Mesh"]
+blender_version_min = "4.2.0"
+blender_version_max = "4.4.0"
+license = ["SPDX:LGPL-2.0-only"]
+platforms = ["windows-x64", "linux-x64", "macos-x64", "macos-arm64"]
+
+[permissions]
+files = "Import and Export files from disk"

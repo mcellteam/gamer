@@ -37,7 +37,7 @@ from bpy.props import (
 )
 import bmesh
 
-import blendgamer.pygamer as g
+from . import pygamer
 
 import importlib.util
 
@@ -45,12 +45,12 @@ mpl_spec = importlib.util.find_spec("matplotlib")
 mpl_found = mpl_spec is not None
 
 if mpl_found:
-    from blendgamer.colormap import dataToVertexColor
+    from .colormap import dataToVertexColor
 
-from blendgamer.colormap_enums import colormap_enums
+from .colormap_enums import colormap_enums
 
-import blendgamer.report as meshreport
-from blendgamer.util import *
+from . import meshreport
+from .util import *
 
 
 ## Following ops are from 3D Print Addon
@@ -418,7 +418,7 @@ class GAMER_OT_write_quality_info(bpy.types.Operator):
                 print("Dumping quality info of mesh %s to file %s" % (obj.name, fname))
                 try:
                     gmesh = blender_to_gamer(obj=obj)
-                    g.printQualityInfo(fname, gmesh)
+                    pygamer.printQualityInfo(fname, gmesh)
                 except Exception as e:
                     self.report({"ERROR"}, str(e))
                     return {"CANCELLED"}

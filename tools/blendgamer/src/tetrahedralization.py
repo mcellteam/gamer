@@ -33,8 +33,9 @@ from bpy.props import (
     BoolVectorProperty,
 )
 
-import blendgamer.pygamer as g
-from blendgamer.util import *
+#import blendgamer.pygamer as g
+from . import pygamer
+from .util import *
 
 # python imports
 import os
@@ -427,7 +428,7 @@ class GAMerTetrahedralizationPropertyGroup(bpy.types.PropertyGroup):
                 {"INFO"},
                 "Writing surface meshes to Comsol file: " + filename + ".mphtxt",
             )
-            g.writeComsol(filename + ".mphtxt", gmeshes)
+            pygamer.writeComsol(filename + ".mphtxt", gmeshes)
 
     def tetrahedralize(self, context, report):
         self.validate_domain_objects(context, report)
@@ -508,7 +509,7 @@ class GAMerTetrahedralizationPropertyGroup(bpy.types.PropertyGroup):
                 print("TetGen quality string: " + quality_str)
                 print("========================================")
                 # Do the tetrahedralization
-                tetmesh = g.makeTetMesh(gmeshes, quality_str)
+                tetmesh = pygamer.makeTetMesh(gmeshes, quality_str)
 
                 # for i in range(0,5):
                 #     print("Laplacian smooth iteration.")
@@ -526,17 +527,17 @@ class GAMerTetrahedralizationPropertyGroup(bpy.types.PropertyGroup):
                             "Writing to " + fmt + " file: " + filename + suffix,
                         )
                         if fmt == "dolfin":
-                            g.writeDolfin(filename + suffix, tetmesh)
+                            pygamer.writeDolfin(filename + suffix, tetmesh)
                         if fmt == "paraview":
-                            g.writeVTK(filename + suffix, tetmesh)
+                            pygamer.writeVTK(filename + suffix, tetmesh)
                         if fmt == "comsol":
-                            g.writeComsol(filename + suffix, tetmesh)
+                            pygamer.writeComsol(filename + suffix, tetmesh)
                     except Exception as ex:
                         report({"ERROR"}, str(ex))
 
                 if self.export_mean_curvature:
                     surfaces = tetmesh.extractSurfaceFromBoundary()
-                    g.curvatureMDSBtoDolfin(
+                    pygamer.curvatureMDSBtoDolfin(
                         f"{filename}_mean_curvature", surfaces, tetmesh
                     )
 

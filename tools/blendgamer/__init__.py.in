@@ -19,7 +19,9 @@
 # Boston, MA 02111-1307 USA
 # **************************************************************************
 
-bl_info = {
+import importlib
+
+gamer_info = {
         "name": "GAMer: Geometry-preserving Adaptive Mesher",
         "description": "Utilities for generating finite elements simulation compatible meshes",
         "author": "Christopher T. Lee, Justin Laughlin, John B. Moody, Zeyun Yu, Tom Bartol, Johan Hake, and Michael Holst",
@@ -32,6 +34,7 @@ bl_info = {
         "category": "Mesh",
     }
 
+'''
 if "bpy" in locals():
     import importlib
     importlib.reload(blendgamer)
@@ -55,6 +58,35 @@ else:
             ui,
             versions,
             )
+'''
+
+# Tuple of names of modules to import
+IMPORT_MODULE_NAMES = (
+                       'curvatures',
+                       'markers',
+                       'meshstats',
+                       'meshreport',
+                       'surfacemesh_ops',
+                       'tetrahedralization',
+                       'ui',
+                       'versions',
+                       'blendgamer',
+                      )
+_import_modules = []
+
+# Tuple of names of modules to register
+REGISTER_MODULE_NAMES = (
+                       'curvatures',
+                       'markers',
+                       'meshstats',
+                       'surfacemesh_ops',
+                       'tetrahedralization',
+                       'ui',
+                       'versions',
+                       'blendgamer',
+                      )
+_register_modules = []
+
 
 # General import
 import bpy
@@ -66,6 +98,7 @@ elif bpy.app.version < (2, 80, 0):
     bl_info['blender'] = (2, 79, 0)
 
 # Tuple of modules to register
+'''
 modules = (curvatures,
            markers,
            meshstats,
@@ -74,6 +107,7 @@ modules = (curvatures,
            ui,
            versions,
            blendgamer)
+'''
 
 def add_handler(handler_list, handler_function):
     """ Only add a handler if it's not already in the list """
@@ -87,7 +121,21 @@ def remove_handler(handler_list, handler_function):
         handler_list.remove(handler_function)
 
 def register():
-    for module in modules:
+
+    _import_modules.clear()
+    _register_modules.clear()
+                 
+    for module_name in IMPORT_MODULE_NAMES:
+        if module_name in locals():
+            module = importlib.reload(locals()[module_name])
+        else:      
+            module = importlib.import_module(f'.{module_name}', package=__package__)
+            _import_modules.append(module)
+        if module_name in REGISTER_MODULE_NAMES:
+            _register_modules.append(module)
+
+
+    for module in _register_modules:
         module.register()
 
     types = bpy.types
@@ -105,7 +153,7 @@ def unregister():
     del types.Object.gamer
     del types.Scene.gamer
 
-    for module in reversed(modules):
+    for module in reversed(_register_modules):
         module.unregister()
 
 # for testing

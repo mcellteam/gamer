@@ -19,11 +19,14 @@
 # Boston, MA 02111-1307 USA
 # ***************************************************************************
 
+import sys
+import subprocess as sp
+import pickle
 import bpy
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from blendgamer.util import *
+from .util import *
 
 # Recommended backend if a non-interactive backend is the default
 # $ pip install pyqt5
@@ -60,13 +63,13 @@ def curveToData(crv, context):
     with ObjectMode():
         layer = getCurvatureLayer(obj, crv.algorithm, crv.curvatureType)
 
-    data = np.zeros(len(obj.data.vertices), dtype=np.float)
+    data = np.zeros(len(obj.data.vertices), dtype=np.float64)
     # Copy curvatures over
     layer.foreach_get("value", data)
 
     if crv.curveIter > 0:
         for i in range(0, crv.curveIter):
-            tmp = np.zeros(len(obj.data.vertices), dtype=np.float)
+            tmp = np.zeros(len(obj.data.vertices), dtype=np.float64)
             for v in bm.verts:
                 count = 1
                 tmp[v.index] = data[v.index]
@@ -99,6 +102,7 @@ def dataToVertexColor(crv, context, showplot=False, saveplot=False):
 
     data = curveToData(crv, context)
     cmap = colormapDict[crv.colormap]
+    vlayer = "%s%s_color" % (crv.algorithm, crv.curvatureType)
     file_prefix = "%s_%s_m%dM%dI%dmx%0.2f%s" % (
         bpy.path.basename(bpy.context.blend_data.filepath).split(".")[0],
         context.object.name,
@@ -109,8 +113,6 @@ def dataToVertexColor(crv, context, showplot=False, saveplot=False):
         crv.curvatureType,
     )
 
-    fig = plt.figure(figsize=(8, 5))
-    ax = fig.add_axes([0.1, 0.05, 0.6, 0.9])
 
     ## This code helps make the plots easier to read...
     # tmin = np.percentile(data,1)
@@ -122,16 +124,7 @@ def dataToVertexColor(crv, context, showplot=False, saveplot=False):
     tmax = crv.maxCurve
     amin = np.amin(data)
     amax = np.amax(data)
-    amean = np.mean(data)
-    amedian = np.median(data)
 
-    if showplot:
-        ax.hist(data, bins="auto")
-        ax.set_title("%s Distribution" % (file_prefix))
-        ax.axvline(amin, color="r", linestyle="dashed", linewidth=1)
-        ax.axvline(amax, color="r", linestyle="dashed", linewidth=1)
-
-    extend = "neither"
     # the tmin/tmax values are percentiles instead
     if crv.limitsArePercentiles:
         # print("Using min/max values as percentiles!")
@@ -154,26 +147,28 @@ def dataToVertexColor(crv, context, showplot=False, saveplot=False):
             % (lowerPercentile, upperPercentile)
         )
 
-    if showplot:
-        ax.axvline(tmin, color="g", linestyle="dashed", linewidth=2)
-        ax.axvline(tmax, color="g", linestyle="dashed", linewidth=2)
-
-        if tmin > amin and tmax < amax:
-            extend = "both"
-        elif tmin > amin:
-            extend = "min"
-        elif tmax < amax:
-            extend = "max"
+    if showplot or saveplot:
+      python_cmd = sys.executable
+      plot_cmd = [ python_cmd, 'plot_curvature.py' ]
+      # Make dictionary to hold data and args to send to plot_curvature.py
+      p_dict = {}
+      p_dict['data'] = data
+      p_dict['mixpoint'] = crv.mixpoint
+      p_dict['tmin'] = tmin
+      p_dict['tmax'] = tmax
+      p_dict['cmap'] = cmap
+      p_dict['showplot'] = showplot
+      p_dict['saveplot'] = saveplot
+      p_dict['file_prefix'] = file_prefix
+      p_dict['vlayer'] = vlayer
+      proc = sp.Popen(plot_cmd, stdin=sp.PIPE, stdout=None, stderr=None)
+      proc.stdin.write(pickle.dumps(p_dict))
+      proc.stdin.close()
 
     data[data < tmin] = tmin
     data[data > tmax] = tmax
-
     amin = np.amin(data)
     amax = np.amax(data)
-    # if amin > tmin:
-    #     amin = tmin
-    # if amax < tmax:
-    #     amax = tmax
 
     # Construct the norm and colorbar
     if amin < 0 and amax > 0:
@@ -197,65 +192,17 @@ def dataToVertexColor(crv, context, showplot=False, saveplot=False):
         colors = colors[:, :3]
 
     mesh = bpy.context.object.data
-    vlayer = "%s%s_color" % (crv.algorithm, crv.curvatureType)
-
 
     if vlayer not in mesh.vertex_colors:
-        if bpy.app.version < (3, 3, 0):
-            if len(mesh.vertex_colors) == 8:
-                raise RuntimeError(
-                    "Maximum of 8 vertex Layers reached cannot create a new layer. Please delete a layer to continue."
-                )
         mesh.vertex_colors.new(name=vlayer)
 
     color_layer = mesh.vertex_colors[vlayer]
     mesh.vertex_colors[vlayer].active = True
 
-    mloops = np.zeros((len(mesh.loops)), dtype=np.int)
+    mloops = np.zeros((len(mesh.loops)), dtype=np.int64)
     mesh.loops.foreach_get("vertex_index", mloops)
     color_layer.data.foreach_set("color", colors[mloops].flatten())
 
-    # Add axis for colorbar and plot it
-    ax = fig.add_axes([0.75, 0.05, 0.05, 0.9])
-
-    cb = mpl.colorbar.Colorbar(
-        ax, cmap=curvature_map, norm=norm, orientation="vertical"
-    )
-
-    ticks = cb.get_ticks()
-    ticks.sort()
-
-    if ticks[0] < amin:
-        ticks = ticks[1:-1]
-    if ticks[-1] > amax:
-        ticks = ticks[0:-2]
-
-    if amin != ticks[0]:
-        ticks = np.insert(ticks, 0, amin)
-    if amax != ticks[-1]:
-        ticks = np.append(ticks, amax)
-    cb.set_ticks(ticks)
-
-    ticklabels = [r"{:0.1f}".format(tick) for tick in ticks]
-
-    if extend == "neither":
-        pass
-    elif extend == "both":
-        ticklabels[0] = "< " + ticklabels[0]
-        ticklabels[-1] = "> " + ticklabels[-1]
-    elif extend == "max":
-        ticklabels[-1] = "> " + ticklabels[-1]
-    elif extend == "min":
-        ticklabels[0] = "< " + ticklabels[0]
-    cb.set_ticklabels(ticklabels)
-    cb.ax.tick_params(labelsize=14)
-    cb.set_label("%s [$\mu m^{-1}$]" % (vlayer), size=16)
-
-    if saveplot:
-        plt.savefig(file_prefix + ".pdf", format="pdf")
-    if showplot:
-        plt.show()
-    plt.close()
 
 
 def differencePlotter(context, difftype="K1"):
@@ -266,14 +213,14 @@ def differencePlotter(context, difftype="K1"):
         mdsb = getCurvatureLayer(obj, "MDSB", difftype)
         jets = getCurvatureLayer(obj, "JETS", difftype)
 
-        mdsb_data = np.zeros(len(obj.data.vertices), dtype=np.float)
+        mdsb_data = np.zeros(len(obj.data.vertices), dtype=np.float64)
         mdsb.foreach_get("value", mdsb_data)
 
-        jets_data = np.zeros(len(obj.data.vertices), dtype=np.float)
+        jets_data = np.zeros(len(obj.data.vertices), dtype=np.float64)
         jets.foreach_get("value", jets_data)
 
-        tmpmdsb = np.zeros(len(obj.data.vertices), dtype=np.float)
-        tmpjets = np.zeros(len(obj.data.vertices), dtype=np.float)
+        tmpmdsb = np.zeros(len(obj.data.vertices), dtype=np.float64)
+        tmpjets = np.zeros(len(obj.data.vertices), dtype=np.float64)
         for v in bm.verts:
             count = 1
             tmpmdsb[v.index] = mdsb_data[v.index]
@@ -361,7 +308,7 @@ def differencePlotter(context, difftype="K1"):
     color_layer = mesh.vertex_colors[vlayer]
     mesh.vertex_colors[vlayer].active = True
 
-    mloops = np.zeros((len(mesh.loops)), dtype=np.int)
+    mloops = np.zeros((len(mesh.loops)), dtype=np.int64)
     mesh.loops.foreach_get("vertex_index", mloops)
     color_layer.data.foreach_set("color", colors[mloops].flatten())
 

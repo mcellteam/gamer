@@ -34,15 +34,15 @@ from bpy.props import (
 )
 from bpy.app.handlers import persistent
 
-from blendgamer.surfacemesh_ops import SurfaceMeshImprovementProperties
-from blendgamer.versions import checkVersion, getGamerVersion
-from blendgamer.meshstats import MeshQualityReportProperties
-from blendgamer.tetrahedralization import GAMerTetrahedralizationPropertyGroup
-from blendgamer.markers import GAMerBoundaryMarkersList
-from blendgamer.curvatures import GAMerCurvaturesList
-from blendgamer.util import UNSETID, make_annotations, get_material_by_bnd_id, getBndUnsetMat
+from .surfacemesh_ops import SurfaceMeshImprovementProperties
+from .versions import checkVersion, getGamerVersion
+from .meshstats import MeshQualityReportProperties
+from .tetrahedralization import GAMerTetrahedralizationPropertyGroup
+from .markers import GAMerBoundaryMarkersList
+from .curvatures import GAMerCurvaturesList
+from .util import UNSETID, make_annotations, get_material_by_bnd_id, getBndUnsetMat
 
-import blendgamer.pygamer as pygamer
+from . import pygamer
 
 # python imports
 import sys

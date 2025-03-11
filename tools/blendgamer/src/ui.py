@@ -22,14 +22,14 @@
 import bpy
 import bmesh
 
-import blendgamer.report as report
-from blendgamer.util import (
+from . import meshreport
+from .util import (
     UNSETMARKER,
     make_annotations,
     get_material_by_bnd_id,
     getBndUnsetMat,
 )
-import blendgamer.pygamer as pygamer
+from . import pygamer
 
 
 if bpy.app.version < (2, 80, 0):
@@ -197,7 +197,7 @@ class GAMER_PT_mesh_quality(bpy.types.Panel):
     @staticmethod
     def draw_report(layout, context):
         """Display Reports"""
-        info = report.info()
+        info = meshreport.info()
         if info:
             obj = context.edit_object
 

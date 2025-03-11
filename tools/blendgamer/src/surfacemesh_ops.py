@@ -33,9 +33,9 @@ from bpy.props import (
     BoolVectorProperty,
 )
 
-import blendgamer.pygamer as g
-from blendgamer.util import *
-from blendgamer.markers import *
+# import blendgamer.pygamer as g
+from .util import *
+from .markers import *
 
 
 # python imports

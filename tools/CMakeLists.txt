@@ -131,6 +131,8 @@ string(CONCAT _ZIPNAME ${_ZIPNAME} ".zip")
 # Configure the Blender addon metadata
 configure_file(${CMAKE_SOURCE_DIR}/tools/blendgamer/__init__.py.in
             ${CMAKE_BINARY_DIR}/plugin/blendgamer/__init__.py @ONLY)
+configure_file(${CMAKE_SOURCE_DIR}/tools/blendgamer/blender_manifest.toml.in
+            ${CMAKE_BINARY_DIR}/plugin/blendgamer/blender_manifest.toml @ONLY)
 
 # Target to zip up the plugin
 add_custom_target(zip_plugin

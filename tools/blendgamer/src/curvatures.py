@@ -33,7 +33,7 @@ from bpy.props import (
     StringProperty,
     BoolVectorProperty,
 )
-from blendgamer.colormap_enums import colormap_enums
+from .colormap_enums import colormap_enums
 
 import importlib.util
 
@@ -41,9 +41,9 @@ mpl_spec = importlib.util.find_spec("matplotlib")
 mpl_found = mpl_spec is not None
 
 if mpl_found:
-    from blendgamer.colormap import dataToVertexColor, differencePlotter
+    from .colormap import dataToVertexColor, differencePlotter
 
-from blendgamer.util import *
+from .util import *
 
 curvatureTypeEnums = [
     ("K1", "k1", "First principle curvature"),
