@@ -20,6 +20,7 @@
 # ***************************************************************************
 
 import sys
+import os
 import subprocess as sp
 import pickle
 import bpy
@@ -149,7 +150,8 @@ def dataToVertexColor(crv, context, showplot=False, saveplot=False):
 
     if showplot or saveplot:
       python_cmd = sys.executable
-      plot_cmd = [ python_cmd, 'plot_curvature.py' ]
+      pkgdir = os.path.dirname(__file__)
+      plot_cmd = [ python_cmd, os.path.join(pkgdir, 'plot_curvature.py') ]
       # Make dictionary to hold data and args to send to plot_curvature.py
       p_dict = {}
       p_dict['data'] = data
