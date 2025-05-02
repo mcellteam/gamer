@@ -1,110 +1,46 @@
 # ***************************************************************************
 # This file is part of the GAMer software.
-# Copyright (C) 2016-2018
-# by Christopher Lee, Tom Bartol, John Moody, Rommie Amaro, J. Andrew McCammon,
-#    and Michael Holst
-
+# Copyright (C) 2016-2021
+# by Christopher T. Lee and contributors
+#
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 2.1 of the License, or (at your option) any later version.
-
+#
 # This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # Lesser General Public License for more details.
-
+#
 # You should have received a copy of the GNU Lesser General Public
-# License along with this library; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# License along with this library; if not, see <http:#www.gnu.org/licenses/>
+# or write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+# Boston, MA 02111-1307 USA
 # ***************************************************************************
 
+import sys
+import os
+import subprocess as sp
+import pickle
 import bpy
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from blendgamer.util import *
+from .util import *
 
 # Recommended backend if a non-interactive backend is the default
 # $ pip install pyqt5
 # mpl.use('QT5Agg')
 
-mpl.rcParams['pdf.fonttype'] = 42
-mpl.rcParams['ps.fonttype'] = 42
+mpl.rcParams["pdf.fonttype"] = 42
+mpl.rcParams["ps.fonttype"] = 42
 
 # Mapping colormap_enums.colormap_enums to values
 colormapDict = {
-  'VIRIDIS': plt.cm.viridis,
-  'PRGN' : plt.cm.PRGn,
+    "VIRIDIS": plt.cm.viridis,
+    "PRGN": plt.cm.PRGn,
 }
-
-class DivergingNorm(mpl.colors.Normalize):
-    def __init__(self, vcenter, vmin=None, vmax=None):
-        """
-        Normalize data with a set center.
-
-        Useful when mapping data with an unequal rates of change around a
-        conceptual center, e.g., data that range from -2 to 4, with 0 as
-        the midpoint.
-
-        Parameters
-        ----------
-        vcenter : float
-            The data value that defines ``0.5`` in the normalization.
-        vmin : float, optional
-            The data value that defines ``0.0`` in the normalization.
-            Defaults to the min value of the dataset.
-        vmax : float, optional
-            The data value that defines ``1.0`` in the normalization.
-            Defaults to the the max value of the dataset.
-
-        Examples
-        --------
-        This maps data value -4000 to 0., 0 to 0.5, and +10000 to 1.0; data
-        between is linearly interpolated::
-
-            >>> import matplotlib.colors as mcolors
-            >>> offset = mcolors.DivergingNorm(vmin=-4000.,
-                                               vcenter=0., vmax=10000)
-            >>> data = [-4000., -2000., 0., 2500., 5000., 7500., 10000.]
-            >>> offset(data)
-            array([0., 0.25, 0.5, 0.625, 0.75, 0.875, 1.0])
-        """
-
-        self.vcenter = vcenter
-        self.vmin = vmin
-        self.vmax = vmax
-        if not (vcenter and vmin and vmax) and (vcenter >= vmax or vcenter <= vmin):
-            raise ValueError('vmin(%f), vcenter(%f), and vmax(%f) must be in '
-                             'ascending order'%(vmin, vcenter, vmax))
-
-    def autoscale_None(self, A):
-        """
-        Get vmin and vmax, and then clip at vcenter
-        """
-        super().autoscale_None(A)
-        if self.vmin > self.vcenter:
-            self.vmin = self.vcenter
-        if self.vmax < self.vcenter:
-            self.vmax = self.vcenter
-
-
-    def __call__(self, value, clip=False):
-        """
-        Map value to the interval [0, 1].
-        """
-        result, is_scalar = self.process_value(value)
-        self.autoscale_None(result)  # sets self.vmin, self.vmax if None
-
-        if not self.vmin <= self.vcenter <= self.vmax:
-            raise ValueError("vmin, vcenter, vmax must increase monotonically")
-        result = np.ma.masked_array(
-            np.interp(result, [self.vmin, self.vcenter, self.vmax],
-                      [0, 0.5, 1.]), mask=np.ma.getmask(result))
-        if is_scalar:
-            result = np.atleast_1d(result)[0]
-        return result
-
 
 def curveToData(crv, context):
     """
@@ -128,13 +64,13 @@ def curveToData(crv, context):
     with ObjectMode():
         layer = getCurvatureLayer(obj, crv.algorithm, crv.curvatureType)
 
-    data = np.zeros(len(obj.data.vertices), dtype=np.float)
+    data = np.zeros(len(obj.data.vertices), dtype=np.float64)
     # Copy curvatures over
-    layer.foreach_get('value', data)
+    layer.foreach_get("value", data)
 
     if crv.curveIter > 0:
         for i in range(0, crv.curveIter):
-            tmp = np.zeros(len(obj.data.vertices), dtype=np.float)
+            tmp = np.zeros(len(obj.data.vertices), dtype=np.float64)
             for v in bm.verts:
                 count = 1
                 tmp[v.index] = data[v.index]
@@ -167,17 +103,17 @@ def dataToVertexColor(crv, context, showplot=False, saveplot=False):
 
     data = curveToData(crv, context)
     cmap = colormapDict[crv.colormap]
-    file_prefix = "%s_%s_m%dM%dI%dmx%0.2f%s"%(
-            bpy.path.basename(bpy.context.blend_data.filepath).split('.')[0],
-            context.object.name,
-            crv.minCurve,
-            crv.maxCurve,
-            crv.curveIter,
-            crv.mixpoint,
-            crv.curvatureType)
+    vlayer = "%s%s_color" % (crv.algorithm, crv.curvatureType)
+    file_prefix = "%s_%s_m%dM%dI%dmx%0.2f%s" % (
+        bpy.path.basename(bpy.context.blend_data.filepath).split(".")[0],
+        context.object.name,
+        crv.minCurve,
+        crv.maxCurve,
+        crv.curveIter,
+        crv.mixpoint,
+        crv.curvatureType,
+    )
 
-    fig = plt.figure(figsize=(8,5))
-    ax = fig.add_axes([0.1,0.05,0.6,0.9])
 
     ## This code helps make the plots easier to read...
     # tmin = np.percentile(data,1)
@@ -189,16 +125,7 @@ def dataToVertexColor(crv, context, showplot=False, saveplot=False):
     tmax = crv.maxCurve
     amin = np.amin(data)
     amax = np.amax(data)
-    amean = np.mean(data)
-    amedian = np.median(data)
 
-    if showplot:
-        ax.hist(data, bins='auto')
-        ax.set_title("%s Distribution"%(file_prefix))
-        ax.axvline(amin, color='r', linestyle='dashed', linewidth=1)
-        ax.axvline(amax, color='r', linestyle='dashed', linewidth=1)
-
-    extend = 'neither'
     # the tmin/tmax values are percentiles instead
     if crv.limitsArePercentiles:
         # print("Using min/max values as percentiles!")
@@ -214,42 +141,47 @@ def dataToVertexColor(crv, context, showplot=False, saveplot=False):
         else:
             upperPercentile = int(tmax)
 
-        tmin = np.percentile(data,lowerPercentile)
-        tmax = np.percentile(data,upperPercentile)
-        print("Data truncated at %f and %f percentiles\n"%(lowerPercentile,upperPercentile) )
+        tmin = np.percentile(data, lowerPercentile)
+        tmax = np.percentile(data, upperPercentile)
+        print(
+            "Data truncated at %f and %f percentiles\n"
+            % (lowerPercentile, upperPercentile)
+        )
 
-    if showplot:
-        ax.axvline(tmin, color='g', linestyle='dashed', linewidth=2)
-        ax.axvline(tmax, color='g', linestyle='dashed', linewidth=2)
+    if showplot or saveplot:
+      python_cmd = sys.executable
+      pkgdir = os.path.dirname(__file__)
+      plot_cmd = [ python_cmd, os.path.join(pkgdir, 'plot_curvature.py') ]
+      # Make dictionary to hold data and args to send to plot_curvature.py
+      p_dict = {}
+      p_dict['data'] = data
+      p_dict['mixpoint'] = crv.mixpoint
+      p_dict['tmin'] = tmin
+      p_dict['tmax'] = tmax
+      p_dict['cmap'] = cmap
+      p_dict['showplot'] = showplot
+      p_dict['saveplot'] = saveplot
+      p_dict['file_prefix'] = file_prefix
+      p_dict['vlayer'] = vlayer
+      proc = sp.Popen(plot_cmd, stdin=sp.PIPE, stdout=None, stderr=None)
+      proc.stdin.write(pickle.dumps(p_dict))
+      proc.stdin.close()
 
-        if tmin > amin and tmax < amax:
-            extend = 'both'
-        elif tmin > amin:
-            extend = 'min'
-        elif tmax < amax:
-            extend = 'max'
-
-    data[data < tmin] =tmin
-    data[data > tmax] =tmax
-
+    data[data < tmin] = tmin
+    data[data > tmax] = tmax
     amin = np.amin(data)
     amax = np.amax(data)
 
-    # if amin > tmin:
-    #     amin = tmin
-    # if amax < tmax:
-    #     amax = tmax
-
     # Construct the norm and colorbar
     if amin < 0 and amax > 0:
-        norm = DivergingNorm(vmin=amin, vcenter=0, vmax=amax)
-        # Python 3.5 matplotlib may not support?
-        # norm = mpl.colors.DivergingNorm(vmin=amin, vcenter=0, vmax=amax)
+        norm = mpl.colors.TwoSlopeNorm(0, vmin=amin, vmax=amax)
         colors_neg = cmap(np.linspace(0, crv.mixpoint, 256))
         colors_pos = cmap(np.linspace(crv.mixpoint, 1, 256))
 
         all_colors = np.vstack((colors_neg, colors_pos))
-        curvature_map = mpl.colors.LinearSegmentedColormap.from_list('curvature_map', all_colors)
+        curvature_map = mpl.colors.LinearSegmentedColormap.from_list(
+            "curvature_map", all_colors
+        )
     else:
         norm = mpl.colors.Normalize(vmin=amin, vmax=amax)
         curvature_map = cmap
@@ -258,76 +190,39 @@ def dataToVertexColor(crv, context, showplot=False, saveplot=False):
     colors = curvature_map(norm(data))
 
     # Create view without alpha channel if Blender < 2.80
-    if bpy.app.version < (2,80,0):
-        colors = colors[:,:3]
+    if bpy.app.version < (2, 80, 0):
+        colors = colors[:, :3]
 
     mesh = bpy.context.object.data
-    vlayer = "%s%s"%(crv.algorithm, crv.curvatureType)
 
     if vlayer not in mesh.vertex_colors:
-        if len(mesh.vertex_colors) == 8:
-            raise RuntimeError("Maximum of 8 vertex Layers reached cannot create a new layer. Please delete a layer to continue.")
         mesh.vertex_colors.new(name=vlayer)
 
     color_layer = mesh.vertex_colors[vlayer]
     mesh.vertex_colors[vlayer].active = True
 
-    mloops = np.zeros((len(mesh.loops)), dtype=np.int)
+    mloops = np.zeros((len(mesh.loops)), dtype=np.int64)
     mesh.loops.foreach_get("vertex_index", mloops)
     color_layer.data.foreach_set("color", colors[mloops].flatten())
 
-    # Add axis for colorbar and plot it
-    ax = fig.add_axes([0.75,0.05,0.05,0.9])
-    cb = mpl.colorbar.ColorbarBase(ax, cmap=curvature_map, norm=norm,
-                orientation='vertical')
-
-    ticks = cb.get_ticks()
-    ticks.sort()
-
-    if amin != ticks[0]:
-        ticks = np.insert(ticks, 0, amin)
-    if amax != ticks[-1]:
-        ticks = np.append(ticks, amax)
-    cb.set_ticks(ticks)
-
-    ticklabels = [r"{:0.1f}".format(tick) for tick in ticks]
-
-    if extend == 'neither':
-       pass
-    elif extend == 'both':
-        ticklabels[0] = "< " + ticklabels[0]
-        ticklabels[-1] = "> " + ticklabels[-1]
-    elif extend == 'max':
-        ticklabels[-1] = "> " + ticklabels[-1]
-    elif extend == 'min':
-        ticklabels[0] = "< " + ticklabels[0]
-    cb.set_ticklabels(ticklabels)
-    cb.ax.tick_params(labelsize=14)
-    cb.set_label("%s [$\mu m^{-1}$]"%(vlayer), size=16)
-
-    if saveplot:
-        plt.savefig(file_prefix+'.pdf', format='pdf')
-    if showplot:
-        plt.show()
-    plt.close()
 
 
-def differencePlotter(context, difftype='K1'):
+def differencePlotter(context, difftype="K1"):
     obj = getActiveMeshObject()
     bm = bmesh_from_object(obj)
 
     with ObjectMode():
-        mdsb = getCurvatureLayer(obj, 'MDSB', difftype)
-        jets = getCurvatureLayer(obj, 'JETS', difftype)
+        mdsb = getCurvatureLayer(obj, "MDSB", difftype)
+        jets = getCurvatureLayer(obj, "JETS", difftype)
 
-        mdsb_data = np.zeros(len(obj.data.vertices), dtype=np.float)
-        mdsb.foreach_get('value', mdsb_data)
+        mdsb_data = np.zeros(len(obj.data.vertices), dtype=np.float64)
+        mdsb.foreach_get("value", mdsb_data)
 
-        jets_data = np.zeros(len(obj.data.vertices), dtype=np.float)
-        jets.foreach_get('value', jets_data)
+        jets_data = np.zeros(len(obj.data.vertices), dtype=np.float64)
+        jets.foreach_get("value", jets_data)
 
-        tmpmdsb = np.zeros(len(obj.data.vertices), dtype=np.float)
-        tmpjets = np.zeros(len(obj.data.vertices), dtype=np.float)
+        tmpmdsb = np.zeros(len(obj.data.vertices), dtype=np.float64)
+        tmpjets = np.zeros(len(obj.data.vertices), dtype=np.float64)
         for v in bm.verts:
             count = 1
             tmpmdsb[v.index] = mdsb_data[v.index]
@@ -345,56 +240,56 @@ def differencePlotter(context, difftype='K1'):
         jets_data = np.array(tmpjets, copy=True)
     data = mdsb_data - jets_data
 
-    cmap = colormapDict['PRGN']
-    file_prefix = "%s_difference"%(difftype)
+    cmap = colormapDict["PRGN"]
+    file_prefix = "%s_difference" % (difftype)
 
-    fig = plt.figure(figsize=(8,5))
-    ax = fig.add_axes([0.1,0.05,0.6,0.9])
+    fig = plt.figure(figsize=(8, 5))
+    ax = fig.add_axes([0.1, 0.05, 0.6, 0.9])
 
     amin = np.amin(data)
     amax = np.amax(data)
     amean = np.mean(data)
     amedian = np.median(data)
 
-    plt.hist(data, bins='auto')
-    plt.title("%s Distribution"%(file_prefix))
-    plt.axvline(amin, color='r', linestyle='dashed', linewidth=1)
-    plt.axvline(amax, color='r', linestyle='dashed', linewidth=1)
+    plt.hist(data, bins="auto")
+    plt.title("%s Distribution" % (file_prefix))
+    plt.axvline(amin, color="r", linestyle="dashed", linewidth=1)
+    plt.axvline(amax, color="r", linestyle="dashed", linewidth=1)
 
     # Save full data
-    np.savez(context.object.name+'difference'+difftype+'.npz', data)
-    extend = 'neither'
+    np.savez(context.object.name + "difference" + difftype + ".npz", data)
+    extend = "neither"
     # tmin = amin
     # tmax = amax
-    tmin = np.percentile(data,1)
-    tmax = np.percentile(data,99)
+    tmin = np.percentile(data, 1)
+    tmax = np.percentile(data, 99)
 
-    ax.axvline(tmin, color='g', linestyle='dashed', linewidth=2)
-    ax.axvline(tmax, color='g', linestyle='dashed', linewidth=2)
+    ax.axvline(tmin, color="g", linestyle="dashed", linewidth=2)
+    ax.axvline(tmax, color="g", linestyle="dashed", linewidth=2)
 
     if tmin > amin and tmax < amax:
-        extend = 'both'
+        extend = "both"
     elif tmin > amin:
-        extend = 'min'
+        extend = "min"
     elif tmax < amax:
-        extend = 'max'
+        extend = "max"
 
-    data[data < tmin] =tmin
-    data[data > tmax] =tmax
+    data[data < tmin] = tmin
+    data[data > tmax] = tmax
 
     amin = np.amin(data)
     amax = np.amax(data)
 
     # Construct the norm and colorbar
     if amin < 0 and amax > 0:
-        norm = DivergingNorm(vmin=amin, vcenter=0, vmax=amax)
-        # Python 3.5 matplotlib may not support?
-        # norm = mpl.colors.DivergingNorm(vmin=amin, vcenter=0, vmax=amax)
-        colors_neg = cmap(np.linspace(0, .5, 256))
-        colors_pos = cmap(np.linspace(.5, 1, 256))
+        norm = mpl.colors.TwoSlopeNorm(0, vmin=amin, vmax=amax)
+        colors_neg = cmap(np.linspace(0, 0.5, 256))
+        colors_pos = cmap(np.linspace(0.5, 1, 256))
 
         all_colors = np.vstack((colors_neg, colors_pos))
-        curvature_map = mpl.colors.LinearSegmentedColormap.from_list('curvature_map', all_colors)
+        curvature_map = mpl.colors.LinearSegmentedColormap.from_list(
+            "curvature_map", all_colors
+        )
     else:
         norm = mpl.colors.Normalize(vmin=amin, vmax=amax)
         curvature_map = cmap
@@ -403,11 +298,11 @@ def differencePlotter(context, difftype='K1'):
     colors = curvature_map(norm(data))
 
     # Create view without alpha channel if Blender < 2.80
-    if bpy.app.version < (2,80,0):
-        colors = colors[:,:3]
+    if bpy.app.version < (2, 80, 0):
+        colors = colors[:, :3]
 
     mesh = bpy.context.object.data
-    vlayer = "%s_diff"%(difftype)
+    vlayer = "%s_diff" % (difftype)
 
     if vlayer not in mesh.vertex_colors:
         mesh.vertex_colors.new(name=vlayer)
@@ -415,14 +310,15 @@ def differencePlotter(context, difftype='K1'):
     color_layer = mesh.vertex_colors[vlayer]
     mesh.vertex_colors[vlayer].active = True
 
-    mloops = np.zeros((len(mesh.loops)), dtype=np.int)
+    mloops = np.zeros((len(mesh.loops)), dtype=np.int64)
     mesh.loops.foreach_get("vertex_index", mloops)
     color_layer.data.foreach_set("color", colors[mloops].flatten())
 
     # Add axis for colorbar and plot it
-    ax = fig.add_axes([0.75,0.05,0.05,0.9])
-    cb = mpl.colorbar.ColorbarBase(ax, cmap=curvature_map, norm=norm,
-                orientation='vertical')
+    ax = fig.add_axes([0.75, 0.05, 0.05, 0.9])
+    cb = mpl.colorbar.ColorbarBase(
+        ax, cmap=curvature_map, norm=norm, orientation="vertical"
+    )
 
     ticks = cb.get_ticks()
     ticks.sort()
@@ -436,26 +332,25 @@ def differencePlotter(context, difftype='K1'):
     ticklabels = [r"{:0.1f}".format(tick) for tick in ticks]
 
     # extend = 'neither'
-    if extend == 'neither':
-       pass
-    elif extend == 'both':
+    if extend == "neither":
+        pass
+    elif extend == "both":
         ticklabels[0] = "< " + ticklabels[0]
         ticklabels[-1] = "> " + ticklabels[-1]
-    elif extend == 'max':
+    elif extend == "max":
         ticklabels[-1] = "> " + ticklabels[-1]
-    elif extend == 'min':
+    elif extend == "min":
         ticklabels[0] = "< " + ticklabels[0]
     cb.set_ticklabels(ticklabels)
     cb.ax.tick_params(labelsize=14)
-    cb.set_label("%s [$\mu m^{-1}$]"%(vlayer), size=16)
+    cb.set_label("%s [$\mu m^{-1}$]" % (vlayer), size=16)
 
-    plt.savefig(context.object.name+'difference'+difftype+'.pdf', format='pdf')
+    plt.savefig(context.object.name + "difference" + difftype + ".pdf", format="pdf")
     # plt.show()
     plt.close()
 
 
-
-def eng_notation(x,pos):
-    num, power = '{:.1e}'.format(x).split('e')
-    power=int(power)
-    return r'${} \times 10^{{{}}}$'.format(num, power)
+def eng_notation(x, pos):
+    num, power = "{:.1e}".format(x).split("e")
+    power = int(power)
+    return r"${} \times 10^{{{}}}$".format(num, power)

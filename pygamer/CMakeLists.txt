@@ -19,6 +19,33 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 # ***************************************************************************
 
+include(FetchContent)
+
+###########################
+# GET PYBIND11
+###########################
+if(NOT GETPYBIND11)
+    find_package(pybind11 CONFIG REQUIRED)
+    if(NOT pybind11_FOUND)
+        message(FATAL_ERROR "Could not find required library pybind11."
+            "Please append -DGETPYBIND11=ON to your cmake call and I will download pybind11 for you.")
+    endif()
+else()
+    FetchContent_Declare(
+        pybind11
+        GIT_REPOSITORY  https://github.com/pybind/pybind11.git
+        GIT_TAG         v2.9.2
+        GIT_SHALLOW     TRUE 
+        SOURCE_DIR      "${CMAKE_CURRENT_BINARY_DIR}/pybind11-src"
+        BINARY_DIR      "${CMAKE_CURRENT_BINARY_DIR}/pybind11-build"
+    )
+    FetchContent_GetProperties(pybind11)
+    if(NOT pybind11_POPULATED)
+      FetchContent_Populate(pybind11)
+      add_subdirectory(${pybind11_SOURCE_DIR} ${pybind11_BINARY_DIR})
+    endif()
+endif()
+
 list(APPEND PYGAMER_SOURCES
     "src/Vector.cpp"
 
@@ -70,16 +97,9 @@ string(REGEX REPLACE "\n" ";" _PYTHON_VALUES ${_PYTHON_VALUES})
 list(GET _PYTHON_VALUES 0 PYTHON_SITE_PACKAGES)
 
 file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/__init__.py
-             INPUT ${CMAKE_SOURCE_DIR}/cmake-modules/__init__.py.in)
+             INPUT ${CMAKE_SOURCE_DIR}/cmake/__init__.py.in)
 
 if(SKBUILD)
     install(TARGETS pygamer LIBRARY DESTINATION pygamer)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/__init__.py DESTINATION pygamer)
-else()
-    message(STATUS "CMake install no longer installs PyGAMer to your Python site-packages. "
-        "Please configure and install using 'python setup.py install' instead."
-    )
-    # Otherwise put in PREFIX/lib if conventionally installed
-    # install(TARGETS pygamer LIBRARY DESTINATION "${PYTHON_SITE_PACKAGES}/pygamer")
-    # install(FILES ${CMAKE_CURRENT_BINARY_DIR}/__init__.py DESTINATION "${PYTHON_SITE_PACKAGES}/pygamer")
 endif()

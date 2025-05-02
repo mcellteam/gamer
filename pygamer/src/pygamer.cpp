@@ -1,26 +1,21 @@
-/*
- * ***************************************************************************
- * This file is part of the GAMer software.
- * Copyright (C) 2016-2019
- * by Christopher Lee, John Moody, Rommie Amaro, J. Andrew McCammon,
- *    and Michael Holst
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- *
- * ***************************************************************************
- */
+// This file is part of the GAMer software.
+// Copyright (C) 2016-2021
+// by Christopher T. Lee and contributors
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, see <http://www.gnu.org/licenses/>
+// or write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+// Boston, MA 02111-1307 USA
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -121,6 +116,21 @@ PYBIND11_MODULE(pygamer, pygamer) {
         )delim"
     );
 
+    pygamer.def("readPDB_distgrid", &readPDB_distgrid,
+        py::arg("filename"),
+        py::arg("radius") = 1.4,
+        R"delim(
+            Compute the Connolly surface using a distance grid based strategy
+
+            Args:
+                filename (:py:class:`str`): PDB file to read.
+                radius (:py:class:`float`): Radius in Angstroms of ball to roll over surface.
+            
+            Returns:
+                :py:class:`surfacemesh.SurfaceMesh`: Meshed object.
+        )delim"
+    );
+    
     pygamer.def("readPDB_gauss", &readPDB_gauss,
         py::arg("filename"),
         py::arg("blobbyness") = -0.2,
@@ -290,6 +300,40 @@ PYBIND11_MODULE(pygamer, pygamer) {
 
             Returns:
                 :py:class:`tetmesh.TetMesh`: Resulting tetrahedral mesh
+        )delim"
+    );
+
+    pygamer.def("writeComsol", py::overload_cast<const std::string&, const std::vector<SurfaceMesh const *>&>(&writeComsol),
+        py::arg("filename"), py::arg("meshes"),
+        R"delim(
+            Write a list of surface meshes to comsol mphtxt format.
+
+            Args:
+                filename (:py:class:`string`): Filename for output
+                meshes (:py:class:`list`(:py:class:`surfacemesh.SurfaceMesh`): List of meshes with filled metadata
+        )delim" 
+    );
+
+    pygamer.def("writeComsol", py::overload_cast<const std::string&, const TetMesh&>(&writeComsol),
+        py::arg("filename"), py::arg("mesh"),
+        R"delim(
+            Write mesh to file in Comsol mphtxt format
+
+            Args:
+                filename (:py:class:`str`): Filename to write to
+                mesh (:py:class:`tetmesh.TetMesh`): Mesh of interest
+        )delim"
+    );
+
+    pygamer.def("curvatureMDSBtoDolfin", &curvatureMDSBtoDolfin,
+            py::arg("filename"), py::arg("mesh"), py::arg("tetmesh"),
+        R"delim(
+            Write curvature to dolfin
+
+            Args:
+                filename (:py:class:`str`): Filename to write to
+                mesh (:py:class:`surfacemesh.SurfaceMesh`): list of surface meshes
+                tetmesh (:py:class:`tetmesh.TetMesh`): Tet mesh
         )delim"
     );
 
