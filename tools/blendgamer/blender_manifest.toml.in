@@ -8,7 +8,7 @@ type = "add-on"
 "website" = "https://github.com/ctlee/gamer"
 tags = ["Mesh"]
 blender_version_min = "4.2.0"
-blender_version_max = "4.4.0"
+blender_version_max = "4.5.0"
 license = ["SPDX:LGPL-2.0-only"]
 platforms = ["windows-x64", "linux-x64", "macos-x64", "macos-arm64"]
 
